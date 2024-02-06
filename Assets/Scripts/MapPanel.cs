@@ -15,6 +15,8 @@ public class MapPanel : MonoBehaviour, IPointerClickHandler
 
     public bool ActiveSelf => gameObject.activeSelf;
 
+    public Vector3 Position => gameObject.transform.position;
+
     public void Initialize(int mapX, int mapY, Action<int, int> onClickCallback)
     {
         _mapX = mapX;

@@ -68,6 +68,8 @@ public class CalcMovePath
         int movePower = _moveRange[targetMapPositionY, targetMapPositionX] - _mapInfo.MAP[targetMapPositionY, targetMapPositionX];
         SearchInFourDirections(targetMapPositionX, targetMapPositionY, movePower);
 
+        // 逆順で格納されているため順番を開始座標～目標座標に直してから返す
+        _resultMovePath.Reverse();
         return _resultMovePath;
     }
 

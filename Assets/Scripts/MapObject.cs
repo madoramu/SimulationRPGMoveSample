@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -16,6 +17,18 @@ public class MapObject : MonoBehaviour
 
     [SerializeField, Header("移動経路マテリアル")]
     private Material _movePathMaterial;
+
+    [SerializeField, Header("攻撃可能範囲マテリアル")]
+    private Material _attackRangeMaterial;
+
+    [SerializeField]
+    private Transform _mapObjectParent;
+
+    [SerializeField]
+    private GameObject _forestObject;
+
+    [SerializeField]
+    private GameObject _wallObject;
 
     private MapInfo _mapInfo;
 
@@ -45,6 +58,17 @@ public class MapObject : MonoBehaviour
                 MapPanel mapPanel = Instantiate<MapPanel>(_mapPanelObject, instantiatePosition, instantiateQuaternion, transform);
                 mapPanel.Initialize(x, y, _onClickMapPanelCallback);
                 _mapPanelInfos.Add((y, x), mapPanel);
+
+                // 森の場合はその地点にオブジェクトを生成
+                if (_mapInfo.MAP[y, x] == -2)
+                {
+                    Instantiate(_forestObject, new Vector3(instantiatePosition.x, _forestObject.transform.position.y, instantiatePosition.z), Quaternion.identity, _mapObjectParent).SetActive(true);
+                }
+                // 壁の場合はその地点にオブジェクトを生成
+                if (_mapInfo.MAP[y, x] == -10)
+                {
+                    Instantiate(_wallObject, new Vector3(instantiatePosition.x, _wallObject.transform.position.y, instantiatePosition.z), Quaternion.identity, _mapObjectParent).SetActive(true);
+                }
             }
         }
     }
@@ -108,13 +132,47 @@ public class MapObject : MonoBehaviour
     }
 
     /// <summary>
+    /// 攻撃可能範囲に該当するパネルをアクティブにしてパネルの色を変更する
+    /// </summary>
+    /// <param name="movePath"></param>
+    public void ShowAttackRangePanel(IReadOnlyCollection<Vector2Int> attackRanges)
+    {
+        foreach (var attackRange in attackRanges)
+        {
+            _mapPanelInfos[(attackRange.y, attackRange.x)].SetMaterial(_attackRangeMaterial);
+            _mapPanelInfos[(attackRange.y, attackRange.x)].SetActive(true);
+        }
+    }
+
+    /// <summary>
     /// マップパネルを非表示にする
     /// </summary>
     public void HideMapPanel()
     {
         foreach (var mapPanel in _mapPanelInfos.Values)
         {
+            mapPanel.SetMaterial(_moveRangeMaterial);
             mapPanel.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// 引数の移動経路の対象となるパネルの座標を返す
+    /// </summary>
+    /// <param name="movePath">移動経路</param>
+    /// <returns></returns>
+    public List<Vector3> GetMovePathPanel(List<(int mapY, int mapX, int movePower)> movePath, float playerPositionY)
+    {
+        List<Vector3> movePathPanels = new List<Vector3>(movePath.Count);
+
+        Vector3 tmp;
+        foreach (var item in movePath)
+        {
+            tmp = _mapPanelInfos[(item.mapY, item.mapX)].Position;
+            tmp.y = playerPositionY;
+            movePathPanels.Add(tmp);
+        }
+
+        return movePathPanels;
     }
 }
