@@ -155,7 +155,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 150a9d657f276cc47ac91c335b634ca2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mapObject: {fileID: 1891780722}
   _state: 0
 --- !u!136 &43435853
 CapsuleCollider:
@@ -1113,6 +1112,52 @@ MonoBehaviour:
   _mapObjectParent: {fileID: 1786361387}
   _forestObject: {fileID: 801625345}
   _wallObject: {fileID: 1212534949}
+--- !u!1 &1934493611
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1934493613}
+  - component: {fileID: 1934493612}
+  m_Layer: 0
+  m_Name: PlayerController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1934493612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1934493611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d1763100ad669e47883a820b92d9a5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _mapObject: {fileID: 1891780722}
+  _unitController: {fileID: 43435852}
+--- !u!4 &1934493613
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1934493611}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1120,6 +1165,7 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
+  - {fileID: 1934493613}
   - {fileID: 43435856}
   - {fileID: 1891780721}
   - {fileID: 1205441120}

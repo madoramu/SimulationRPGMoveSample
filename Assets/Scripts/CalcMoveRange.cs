@@ -95,7 +95,7 @@ public class CalcMoveRange
     }
 
     /// <summary>
-    /// 引数の座標がマップ領域内かどうか
+    /// 引数の座標がマップ領域外かどうか
     /// </summary>
     /// <param name="positionX">マップX座標</param>
     /// <param name="positionY">マップY座標</param>

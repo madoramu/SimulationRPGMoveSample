@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
@@ -18,57 +19,65 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
         Moving
     }
 
-    [SerializeField]
-    private MapObject _mapObject;
-
     [SerializeField, ReadOnly]
     private State _state = State.Wait;
 
     private Vector2Int _currentMapPosition = new Vector2Int(3, 3);
     private int _movePower = 3;
-    private CalcMoveRange _calcMoveRange = new CalcMoveRange(new MapInfo());
-    private CalcMovePath _calcMovePath = new CalcMovePath(new MapInfo());
-    private CalcAttackRange _calcAttackRange = new CalcAttackRange(new MapInfo());
+    private CalcMoveRange _calcMoveRange;
+    private CalcMovePath _calcMovePath;
+    private CalcAttackRange _calcAttackRange;
 
     private int[,] _currentMoveRange;
     private IReadOnlyCollection<Vector2Int> _attackRangeMaps;
     private Vector2Int _currentMoveMapPosition;
     private List<(int mapY, int mapX, int movePower)> _currentMovePath;
 
-    void Awake()
+    private Action _onClickUnitCallback;
+    private Action _changeWaitStateCallback;
+
+    public State UnitState => _state;
+    public int[,] CurrentMoveRange => _currentMoveRange;
+    public IReadOnlyCollection<Vector2Int> AttackRangeMaps => _attackRangeMaps;
+    public IReadOnlyCollection<(int mapY, int mapX, int movePower)> CurrentMovePath => _currentMovePath;
+
+    /// <summary>
+    /// 初期化
+    /// </summary>
+    /// <param name="mapInfo"></param>
+    /// <param name="onClickUnitCallback"></param>
+    /// <param name="changeWaitStateCallback"></param>
+    public void Initialize(MapInfo mapInfo, Action onClickUnitCallback, Action changeWaitStateCallback)
     {
-        _mapObject.SetOnClickMapPanelCallback(OnClickMapPanel);
+        _calcMoveRange = new CalcMoveRange(mapInfo);
+        _calcMovePath = new CalcMovePath(mapInfo);
+        _calcAttackRange = new CalcAttackRange(mapInfo);
+
+        _onClickUnitCallback = onClickUnitCallback;
+        _changeWaitStateCallback = changeWaitStateCallback;
     }
 
-    public void Update()
+    /// <summary>
+    /// 引数の座標順で移動処理を開始する
+    /// </summary>
+    /// <param name="movePathPanels"></param>
+    public void StartMoveMapPosition(Vector3[] movePathPanels)
     {
-        if (_state != State.SelectMovePath)
+        // 移動先が現在位置と同じ場合は即座に移動終了
+        if (_currentMapPosition == _currentMoveMapPosition)
         {
+            SetWaitState();
             return;
         }
 
-        // 移動経路選択時にEnterキーを押したらそのマスに移動する
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            // 移動先が現在位置と同じ場合は即座に移動終了
-            if (_currentMapPosition == _currentMoveMapPosition)
-            {
-                SetWaitState();
-                return;
-            }
-
-            _state = State.Moving;
-            List<Vector3> movePathPanels = _mapObject.GetMovePathPanel(_currentMovePath, transform.position.y);
-            // リストの最初の要素は現在自分がいる座標のため、DOPathには不要なので削除しておく
-            movePathPanels.RemoveAt(0);
-            transform.DOPath(movePathPanels.ToArray(), movePathPanels.Count * 0.25f, PathType.CatmullRom, PathMode.Full3D, 10, Color.red)
-                    .SetLookAt(0.1f)
-                    .OnComplete(()=>
-                    {
-                        _currentMapPosition = _currentMoveMapPosition;
-                        SetWaitState();
-                    });
-        }
+        _state = State.Moving;
+        transform.DOPath(movePathPanels, movePathPanels.Length * 0.25f, PathType.CatmullRom, PathMode.Full3D, 10, Color.red)
+                .SetLookAt(0.1f)
+                .OnComplete(()=>
+                {
+                    _currentMapPosition = _currentMoveMapPosition;
+                    SetWaitState();
+                });
     }
 
     /// <summary>
@@ -86,7 +95,6 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
 
                 // 移動可能範囲の検索
                 _currentMoveRange = _calcMoveRange.GetMoveRangeList(_currentMapPosition.x, _currentMapPosition.y, _movePower);
-                _mapObject.ShowMoveRangePanel(_currentMoveRange);
 
                 // 攻撃可能範囲の検索
                 _attackRangeMaps = _calcAttackRange.GetAttackRangeMaps((1, 1), _currentMoveRange);
@@ -94,10 +102,8 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
                 // 最初は現在の自分の位置を移動先に指定しておく
                 _currentMoveMapPosition = _currentMapPosition;
                 _currentMovePath = _calcMovePath.GetMovePath(_currentMoveMapPosition, _currentMapPosition, _currentMoveRange);
-                _mapObject.ShowMovePathPanel(_currentMovePath);
 
-                // 攻撃可能範囲の表示
-                _mapObject.ShowAttackRangePanel(_attackRangeMaps);
+                _onClickUnitCallback();
                 break;
             case -2:
                 if (_state != State.SelectMovePath) return; 
@@ -114,26 +120,27 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void SetWaitState()
     {
-        _mapObject.HideMapPanel();
         _state = State.Wait;
+        _changeWaitStateCallback();
     }
 
     /// <summary>
-    /// 移動可能範囲表示時に移動可能範囲のパネルをクリックした時の処理
+    /// 引数の座標までの経路計算を行う
     /// </summary>
     /// <param name="mapX"></param>
     /// <param name="mapY"></param>
-    private void OnClickMapPanel(int mapX, int mapY)
+    /// <returns>正常に経路が作成できた場合はtrue, 指定場所までいけない or 既に引数の座標までの計算が済んでいる場合はfalse</returns>
+    public bool CalcMovePathToArgPosition(int mapX, int mapY)
     {
-        if (_currentMoveMapPosition.x == mapX && _currentMoveMapPosition.y == mapY) return;
+        if (_currentMoveMapPosition.x == mapX && _currentMoveMapPosition.y == mapY) return false;
 
         // 引数の座標までの経路検索を行う
         _currentMoveMapPosition.x = mapX;
         _currentMoveMapPosition.y = mapY;
-        _currentMovePath = _calcMovePath.GetMovePath(_currentMoveMapPosition, _currentMapPosition, _currentMoveRange);
-        _mapObject.ShowMovePathPanel(_currentMovePath);
+        List<(int mapY, int mapX, int movePower)> tmpList = _calcMovePath.GetMovePath(_currentMoveMapPosition, _currentMapPosition, _currentMoveRange);
+        if (tmpList == null || tmpList.Count <= 0) return false;
 
-        // 攻撃可能範囲マスがリセットされてしまうので再度ここで表示
-        _mapObject.ShowAttackRangePanel(_attackRangeMaps);
+        _currentMovePath = tmpList;
+        return true;
     }
 }

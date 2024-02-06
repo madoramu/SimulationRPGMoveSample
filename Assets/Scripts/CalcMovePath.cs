@@ -47,6 +47,10 @@ public class CalcMovePath
     {
         _startPosition = new Vector2Int(startMapPositionX, startMapPositionY);
         _startPositionMovePower = moveRange[_startPosition.y, _startPosition.x];
+        _moveRange = moveRange;
+
+        // 移動先が移動不可能だった場合はnullを返して終了
+        if (IsOutsideMap(targetMapPositionX, targetMapPositionY) || _moveRange[targetMapPositionY, targetMapPositionX] <= -1) return null;
 
         // 移動先が現在地と同じ場合はそのまま現在地を渡して終了
         if (targetMapPositionX == _startPosition.x && targetMapPositionY == _startPosition.y)
@@ -56,7 +60,6 @@ public class CalcMovePath
         }
 
         // 移動目標の座標は先に格納しておく
-        _moveRange = moveRange;
         _resultMovePath = new List<(int mapY, int mapX, int movePower)>(_moveRange[startMapPositionY, startMapPositionX])
         {
             (targetMapPositionY, targetMapPositionX, _moveRange[targetMapPositionY, targetMapPositionX])
@@ -80,8 +83,7 @@ public class CalcMovePath
     private bool CheckSearchPath(int positionX, int positionY,  int movePower)
     {
         // 引数の座標がマップ外の場合は検索せず終了
-        if (positionX < 0 || positionX >= MapInfo.MAP_WIDTH) return false;
-        if (positionY < 0 || positionY >= MapInfo.MAP_HEIGHT) return false;
+        if (IsOutsideMap(positionX, positionY)) return false;
 
         // 引数の座標に登録されている移動力と、引数の移動力が一致していれば正しい移動経路としてみなす
         return _moveRange[positionY, positionX] == movePower;
@@ -96,8 +98,7 @@ public class CalcMovePath
     private void SearchInFourDirections(int positionX, int positionY, int movePower)
     {
         // 引数の座標がマップ外の場合は検索せず終了
-        if (positionX < 0 || positionX >= MapInfo.MAP_WIDTH) return;
-        if (positionY < 0 || positionY >= MapInfo.MAP_HEIGHT) return;
+        if (IsOutsideMap(positionX, positionY)) return;
 
         // 上
         if (CheckSearchPath(positionX, positionY - 1, movePower))
@@ -164,5 +165,16 @@ public class CalcMovePath
 
         // 一致しない場合はまだ経路が完成していないのでまた上下左右で一致する移動力を検索する
         SearchInFourDirections(positionX, positionY, movePower);
+    }
+
+    /// <summary>
+    /// 引数の座標がマップ領域外かどうか
+    /// </summary>
+    /// <param name="positionX">マップX座標</param>
+    /// <param name="positionY">マップY座標</param>
+    /// <returns>領域外ならtrue, 領域内ならfalse</returns>
+    private bool IsOutsideMap(int positionX, int positionY)
+    {
+        return positionX < 0 || positionX >= MapInfo.MAP_WIDTH || positionY < 0 || positionY >= MapInfo.MAP_HEIGHT;
     }
 }

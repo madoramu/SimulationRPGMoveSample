@@ -34,16 +34,22 @@ public class MapObject : MonoBehaviour
 
     private Action<int, int> _onClickMapPanelCallback;
 
-    // Start is called before the first frame update
-    void Start()
+    /// <summary>
+    /// マップのセットアップ
+    /// </summary>
+    /// <param name="mapInfo">マップ情報</param>
+    /// <param name="mapInfo">マップのパネルをクリックしたときのコールバック</param>
+    public void SetupMap(MapInfo mapInfo, Action<int, int> onClickMapPanelCallback)
     {
         _mapPanelObject.gameObject.SetActive(false);
 
-        _mapInfo = new MapInfo();
+        _mapInfo = mapInfo;
+        _onClickMapPanelCallback = onClickMapPanelCallback;
         _mapPanelInfos = new Dictionary<(int mapX, int mapY), MapPanel>();
 
         // マップ情報をもとに各マスのオブジェクトを作成
-        Vector2Int leftUpPanelPosition = new Vector2Int(-MapInfo.MAP_WIDTH / 2, -MapInfo.MAP_HEIGHT / 2);
+        // マップ左上のマスは(-x, z)としておく
+        Vector2Int leftUpPanelPosition = new Vector2Int(-MapInfo.MAP_WIDTH / 2, MapInfo.MAP_HEIGHT / 2);
         Vector2Int panelSize = Vector2Int.one;
         Vector3 instantiatePosition = _mapPanelObject.transform.localPosition;
         Quaternion instantiateQuaternion = _mapPanelObject.transform.localRotation;
@@ -51,8 +57,9 @@ public class MapObject : MonoBehaviour
         {
             for (int x = 0; x < MapInfo.MAP_WIDTH; x++)
             {
+                // 左上が(-x, z)なので、そこに対してX座標は加算、Z座標は減算させてマスを埋めていく
                 instantiatePosition.x = leftUpPanelPosition.x + panelSize.x * x;
-                instantiatePosition.z = leftUpPanelPosition.y + panelSize.y * y;
+                instantiatePosition.z = leftUpPanelPosition.y - panelSize.y * y;
                 MapPanel mapPanel = Instantiate<MapPanel>(_mapPanelObject, instantiatePosition, instantiateQuaternion, transform);
                 mapPanel.Initialize(x, y, _onClickMapPanelCallback);
                 _mapPanelInfos.Add((y, x), mapPanel);
@@ -69,15 +76,6 @@ public class MapObject : MonoBehaviour
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// マップのパネルをクリックしたときのコールバック登録
-    /// </summary>
-    /// <param name="callback"></param>
-    public void SetOnClickMapPanelCallback(Action<int, int> callback)
-    {
-        _onClickMapPanelCallback = callback;
     }
 
     /// <summary>
@@ -111,7 +109,7 @@ public class MapObject : MonoBehaviour
     /// 引数の移動経路に該当するパネルをアクティブにしてパネルの色を変更する
     /// </summary>
     /// <param name="movePath"></param>
-    public void ShowMovePathPanel(List<(int mapY, int mapX, int movePower)> movePath)
+    public void ShowMovePathPanel(IReadOnlyCollection<(int mapY, int mapX, int movePower)> movePath)
     {
         // 一度移動可能範囲の全パネルのマテリアルをリセットする
         foreach (var mapPanel in _mapPanelInfos.Values)
@@ -159,7 +157,7 @@ public class MapObject : MonoBehaviour
     /// </summary>
     /// <param name="movePath">移動経路</param>
     /// <returns></returns>
-    public List<Vector3> GetMovePathPanel(List<(int mapY, int mapX, int movePower)> movePath, float playerPositionY)
+    public List<Vector3> GetMovePathPanel(IReadOnlyCollection<(int mapY, int mapX, int movePower)> movePath, float playerPositionY)
     {
         List<Vector3> movePathPanels = new List<Vector3>(movePath.Count);
 
