@@ -1,8 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using UnityEngine;
 
 /// <summary>
@@ -16,13 +11,9 @@ public class CalcMoveRange
     ///<summary> マップ情報 </summary>
     private MapInfo _mapInfo;
 
-    ///<summary> 移動可能範囲の端 </summary>
-    private List<Vector2Int> _moveRangeEdges;
-
     public CalcMoveRange(MapInfo mapInfo)
     {
         _mapInfo = mapInfo;
-        _moveRangeEdges = new List<Vector2Int>();
     }
 
     /// <summary>
@@ -45,7 +36,6 @@ public class CalcMoveRange
     /// <returns>移動可能範囲データが格納された2次元配列</returns>
     public int[,] GetMoveRangeList(int positionX, int positionY, int movePower)
     {
-        _moveRangeEdges.Clear();
         _resultMoveRangeMaps = _mapInfo.MAP.Clone() as int[,];
 
         // 移動開始地点は必ず移動可能なので現在の移動力を代入
