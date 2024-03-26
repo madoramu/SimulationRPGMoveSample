@@ -79,18 +79,19 @@ public class CalcMoveRange
         // マップ領域内チェック
         if (IsOutsideMap(positionX, positionY)) return;
 
+        // 移動コスト分移動力を減らす
         movePower = movePower + _mapInfo.MAP[positionY, positionX];
 
-        // 現在の移動力で上書きできそうな場合のみ上書きする
-        if (movePower <= _resultMoveRangeMaps[positionY, positionX]) return;
+        // 移動力がマイナスになり移動不可 or 既に移動済みで効率の良い移動をしている場合は抜ける
+        if (movePower < 0 || movePower <= _resultMoveRangeMaps[positionY, positionX]) return;
 
-        if (movePower >= 0)
+        // 移動力を登録する
+        _resultMoveRangeMaps[positionY, positionX] = movePower;
+
+        // まだ移動可能な場合は再度4方向に移動可能か検索する
+        if (movePower > 0)
         {
-            _resultMoveRangeMaps[positionY, positionX] = movePower;
-            if (movePower > 0)
-            {
-                SearchInFourDirections(positionX, positionY, movePower);
-            }
+            SearchInFourDirections(positionX, positionY, movePower);
         }
     }
 
