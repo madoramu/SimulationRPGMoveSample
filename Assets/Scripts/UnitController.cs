@@ -105,11 +105,6 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
 
                 _onClickUnitCallback();
                 break;
-            case -2:
-                if (_state != State.SelectMovePath) return; 
-
-                SetWaitState();
-                break;
             default:
                 break;
         }
@@ -118,10 +113,21 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
     /// <summary>
     /// ステートを待機状態にする
     /// </summary>
-    private void SetWaitState()
+    public void SetWaitState()
     {
         _state = State.Wait;
         _changeWaitStateCallback();
+    }
+
+    /// <summary>
+    /// 引数の座標までの経路が既に作成済みか
+    /// </summary>
+    /// <param name="mapX"></param>
+    /// <param name="mapY"></param>
+    /// <returns></returns>
+    public bool HasMovePathToArgPosition(int mapX, int mapY)
+    {
+        return _currentMoveMapPosition.x == mapX && _currentMoveMapPosition.y == mapY;
     }
 
     /// <summary>
@@ -129,11 +135,9 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
     /// </summary>
     /// <param name="mapX"></param>
     /// <param name="mapY"></param>
-    /// <returns>正常に経路が作成できた場合はtrue, 指定場所までいけない or 既に引数の座標までの計算が済んでいる場合はfalse</returns>
+    /// <returns>正常に経路が作成できた場合はtrue, 指定場所までいけない場合はfalse</returns>
     public bool CalcMovePathToArgPosition(int mapX, int mapY)
     {
-        if (_currentMoveMapPosition.x == mapX && _currentMoveMapPosition.y == mapY) return false;
-
         // 引数の座標までの経路検索を行う
         _currentMoveMapPosition.x = mapX;
         _currentMoveMapPosition.y = mapY;

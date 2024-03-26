@@ -26,20 +26,17 @@ public class PlayerController : MonoBehaviour
         _unitController.Initialize(_mapInfo, OnClickUnitControllerCallback, ChangeUnitControllerWaitStateCallback);
     }
 
-    public void Update()
+    void Update()
     {
         if (_unitController.UnitState != UnitController.State.SelectMovePath)
         {
             return;
         }
 
-        // 移動経路選択時にEnterキーを押したらそのマスに移動する
-        if (Input.GetKeyDown(KeyCode.Return))
+        // 移動経路選択時に右クリックしたら待機状態にする
+        if (Input.GetMouseButtonDown(1))
         {
-            List<Vector3> movePathPanels = _mapObject.GetMovePathPanel(_unitController.CurrentMovePath, _unitController.transform.position.y);
-            // リストの最初の要素は現在自分がいる座標のため、DOPathには不要なので削除しておく
-            movePathPanels.RemoveAt(0);
-            _unitController.StartMoveMapPosition(movePathPanels.ToArray());
+            _unitController.SetWaitState();
         }
     }
 
@@ -68,6 +65,17 @@ public class PlayerController : MonoBehaviour
     /// <param name="mapY"></param>
     private void OnClickMapPanel(int mapX, int mapY)
     {
+        // 移動先と同じマスを再度クリックした場合、そのマスに移動する
+        if (_unitController.HasMovePathToArgPosition(mapX, mapY))
+        {
+            List<Vector3> movePathPanels = _mapObject.GetMovePathPanel(_unitController.CurrentMovePath, _unitController.transform.position.y);
+            // リストの最初の要素は現在自分がいる座標のため、DOPathには不要なので削除しておく
+            movePathPanels.RemoveAt(0);
+            _unitController.StartMoveMapPosition(movePathPanels.ToArray());
+            return;
+        }
+
+        // 引数の位置に向かって経路作成を行う。異常値の場合は抜ける
         if (!_unitController.CalcMovePathToArgPosition(mapX, mapY))
         {
             return;
