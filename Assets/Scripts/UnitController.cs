@@ -24,6 +24,7 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
 
     private Vector2Int _currentMapPosition = new Vector2Int(3, 3);
     private int _movePower = 3;
+    private (int, int) _attackRangeDistance = (1, 1);
     private CalcMoveRange _calcMoveRange;
     private CalcMovePath _calcMovePath;
     private CalcAttackRange _calcAttackRange;
@@ -97,7 +98,7 @@ public class UnitController : MonoBehaviour, IPointerClickHandler
                 _currentMoveRange = _calcMoveRange.GetMoveRangeList(_currentMapPosition.x, _currentMapPosition.y, _movePower);
 
                 // 攻撃可能範囲の検索
-                _attackRangeMaps = _calcAttackRange.GetAttackRangeMaps((1, 1), _currentMoveRange);
+                _attackRangeMaps = _calcAttackRange.GetAttackRangeMaps(_attackRangeDistance, _currentMoveRange);
 
                 // 最初は現在の自分の位置を移動先に指定しておく
                 _currentMoveMapPosition = _currentMapPosition;
